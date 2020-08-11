@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+    <id>ZCSW</id>
+    <_name>Drawing Path</_name>
+	<dependency type="executable" location="extensions">Gcode_generation.py</dependency>
+	
+
+	<param name="plotter-command" type="string" _gui-text="Pen-Up Command">M280P0S0</param>
+	<param name="plotter-off-command" type="string" _gui-text="Pen-Down Command:">M280P0S45</param>
+	<param name="travel-speed" type="int" min="0" max="15000" _gui-text="Travel Speed (mm/min or in/min):">3000</param>
+	<param name="plotter-speed" type="int" min="0" max="15000" _gui-text="Draw Speed (mm/min or in/min):">750</param>
+	<param name="power-delay" type="float" min="0" max="1000" _gui-text="Servo Delay (ms or s):">0</param>	
+	<param name="passes" type="int" min="1" max="100" _gui-text="Passes:">1</param>
+	<param name="directory" type="string" _gui-text="Directory:"></param>
+	<param name="filename" type="string" _gui-text="Filename:">output.gcode</param>
+	<param name="add-numeric-suffix-to-filename" type="boolean" _gui-text="Add numeric suffix to filename">true</param>
+
+  <param name="unit" type="enum" _gui-text="All Units (mm or in):">
+    <item value="G21 (All units in mm)">mm</item>
+    <item value="G20 (All units in inches)">in</item>
+  </param>
+
+	<effect>
+		<effects-menu>
+			<submenu _name="SOVOL Gcode"/>
+		</effects-menu>
+		<object-type>path</object-type>
+  	</effect>
+
+	<script>
+		<command reldir="extensions" interpreter="python">Gcode_generation.py</command>
+	</script>
+
+</inkscape-extension>
