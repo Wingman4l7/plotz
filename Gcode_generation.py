@@ -2411,7 +2411,7 @@ class plotter_gcode(inkex.Effect):
         for x in range(1,self.options.passes):
             gcode += "G91\nG1 Z-" + self.options.pass_depth + "\nG90\n" + gcode_pass
         f = open(self.options.directory+self.options.file, "w")
-        f.write(self.options.plotter_off_command + "\n" + self.header + "G1 F" + self.options.travel_speed + "\n" + gcode + self.footer)
+        f.write(self.options.pen_up + "\n" + self.header + "G1 F" + self.options.travel_speed + "\n" + gcode + self.footer)
         f.close()
 
     def __init__(self):
@@ -2419,14 +2419,14 @@ class plotter_gcode(inkex.Effect):
         self.OptionParser.add_option("-d", "--directory",                       action="store", type="string",          dest="directory",                           default="",                             help="Output directory")
         self.OptionParser.add_option("-f", "--filename",                        action="store", type="string",          dest="file",                                default="output.gcode",                 help="File name")
         self.OptionParser.add_option("",   "--add-numeric-suffix-to-filename",  action="store", type="inkbool",         dest="add_numeric_suffix_to_filename",      default=False,                          help="Add numeric suffix to file name")
-        self.OptionParser.add_option("",   "--plotter-command",                 action="store", type="string",          dest="plotter_command",                       default="M280P0S0",                      help="plotter gcode command")
-        self.OptionParser.add_option("",   "--plotter-off-command",             action="store", type="string",          dest="plotter_off_command",                   default="M280P0S45",                         help="plotter gcode end command")
-        self.OptionParser.add_option("",   "--plotter-speed",                   action="store", type="int",             dest="plotter_speed",                         default="750",                          help="plotter speed (mm/min)")
+        self.OptionParser.add_option("",   "--pen-down",                        action="store", type="string",          dest="pen_down",                            default="M280P0S0",                     help="gcode plotter pen down command")
+        self.OptionParser.add_option("",   "--pen-up",                          action="store", type="string",          dest="pen_up",                              default="M280P0S45",                    help="gcode plotter pen up command")
+        self.OptionParser.add_option("",   "--plotter-speed",                   action="store", type="int",             dest="plotter_speed",                       default="750",                          help="plotter speed (mm/min)")
         self.OptionParser.add_option("",   "--travel-speed",                    action="store", type="string",          dest="travel_speed",                        default="3000",                         help="Travel speed (mm/min)")
-        self.OptionParser.add_option("",   "--plotter-power",                   action="store", type="int",             dest="plotter_power",                         default="255",                          help="S# is 256 or 10000 for full power")
+        self.OptionParser.add_option("",   "--plotter-power",                   action="store", type="int",             dest="plotter_power",                       default="255",                          help="S# is 256 or 10000 for full power")
         self.OptionParser.add_option("",   "--passes",                          action="store", type="int",             dest="passes",                              default="1",                            help="Quantity of passes")
         self.OptionParser.add_option("",   "--pass-depth",                      action="store", type="string",          dest="pass_depth",                          default="1",                            help="Depth of plotter cut")
-        self.OptionParser.add_option("",   "--power-delay",                     action="store", type="string",          dest="power_delay",                         default="0",                          help="plotter power-on delay (ms)")
+        self.OptionParser.add_option("",   "--power-delay",                     action="store", type="string",          dest="power_delay",                         default="0",                            help="plotter power-on delay (ms)")
         self.OptionParser.add_option("",   "--suppress-all-messages",           action="store", type="inkbool",         dest="suppress_all_messages",               default=True,                           help="Hide messages during g-code generation")
         self.OptionParser.add_option("",   "--create-log",                      action="store", type="inkbool",         dest="log_create_log",                      default=False,                          help="Create log files")
         self.OptionParser.add_option("",   "--log-filename",                    action="store", type="string",          dest="log_filename",                        default='',                             help="Create log files")
@@ -2784,7 +2784,7 @@ class plotter_gcode(inkex.Effect):
 ###        warnings are printed into log file and warning message is displayed but
 ###        extension continues working, errors causes log and execution is halted
 ###        Notes, warnings adn errors could be assigned to space or comma or dot
-###        sepparated strings (case is ignoreg).
+###        separated strings (case is ignored).
 ################################################################################
     def error(self, s, type_= "Warning"):
         notes = "Note "
@@ -3157,13 +3157,30 @@ class plotter_gcode(inkex.Effect):
             self.orientation( self.layers[min(0,len(self.layers)-1)] )
             self.get_info()
 
+
+
+        # down_degree = GET_FROM_SETTINGS
+        # up_degree = GET_FROM_SETTINGS
+        # step_speed = GET_FROM_SETTINGS  # 1 will be 45 steeps, 5 will be 10 steps.
+        # z_move_commands = ""
+
+        # # start, stop, step
+        # for angle in range(down_degree, up_degree+1, step_speed):
+        #     # move commands
+                    
+                    
+        # BUG: penetration feed & feed should not be same setting (self.options.plotter_speed)
+        # https://marlinfw.org/docs/gcode/G004.html
+        # IMPROVE: dwell (G4) time should be a setting option 
+        # ADD: 
+
         self.tools = {
             "name": "plotter Engraver",
             "id": "plotter Engraver",
             "penetration feed": self.options.plotter_speed,
             "feed": self.options.plotter_speed,
-            "gcode before path": ("G4 P0 \n" + self.options.plotter_command ),
-            "gcode after path": ("G4 P0 \n" + self.options.plotter_off_command ),
+            "gcode before path": ("G4 P0 \n" + self.options.pen_down),
+            "gcode after path": ("G4 P0 \n" + self.options.pen_up),
         }
 
         self.get_info()
