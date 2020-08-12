@@ -2419,8 +2419,9 @@ class plotter_gcode(inkex.Effect):
         self.OptionParser.add_option("-d", "--directory",                       action="store", type="string",          dest="directory",                           default="",                             help="Output directory")
         self.OptionParser.add_option("-f", "--filename",                        action="store", type="string",          dest="file",                                default="output.gcode",                 help="File name")
         self.OptionParser.add_option("",   "--add-numeric-suffix-to-filename",  action="store", type="inkbool",         dest="add_numeric_suffix_to_filename",      default=False,                          help="Add numeric suffix to file name")
-        self.OptionParser.add_option("",   "--pen-down",                        action="store", type="string",          dest="pen_down",                            default="M280P0S0",                     help="gcode plotter pen down command")
-        self.OptionParser.add_option("",   "--pen-up",                          action="store", type="string",          dest="pen_up",                              default="M280P0S45",                    help="gcode plotter pen up command")
+        self.OptionParser.add_option("",   "--pen-move",                        action="store", type="string",          dest="pen_move",                            default="M280P0S",                      help="gcode plotter servo move command")
+        self.OptionParser.add_option("",   "--pen-down",                        action="store", type="string",          dest="pen_down",                            default="0",                            help="plotter pen down servo position")
+        self.OptionParser.add_option("",   "--pen-up",                          action="store", type="string",          dest="pen_up",                              default="45",                           help="plotter pen up servo position")
         self.OptionParser.add_option("",   "--plotter-speed",                   action="store", type="int",             dest="plotter_speed",                       default="750",                          help="plotter speed (mm/min)")
         self.OptionParser.add_option("",   "--travel-speed",                    action="store", type="string",          dest="travel_speed",                        default="3000",                         help="Travel speed (mm/min)")
         self.OptionParser.add_option("",   "--plotter-power",                   action="store", type="int",             dest="plotter_power",                       default="255",                          help="S# is 256 or 10000 for full power")
@@ -2612,7 +2613,7 @@ class plotter_gcode(inkex.Effect):
 ###        Generate Gcode
 ###        Generates Gcode on given curve.
 ###
-###        Crve defenitnion [start point, type = {'arc','line','move','end'}, arc center, arc angle, end point, [zstart, zend]]
+###        Curve definition [start point, type = {'arc','line','move','end'}, arc center, arc angle, end point, [zstart, zend]]
 ###
 ################################################################################
     def generate_gcode(self, curve, layer, depth):
@@ -3157,11 +3158,10 @@ class plotter_gcode(inkex.Effect):
             self.orientation( self.layers[min(0,len(self.layers)-1)] )
             self.get_info()
 
-
-
         # down_degree = GET_FROM_SETTINGS
         # up_degree = GET_FROM_SETTINGS
-        # step_speed = GET_FROM_SETTINGS  # 1 will be 45 steeps, 5 will be 10 steps.
+        # step_speed = GET_FROM_SETTINGS  
+        # 1 will be 45 steps, 5 will be 10 steps.  Higher # ==> faster lift & drop.
         # z_move_commands = ""
 
         # # start, stop, step
@@ -3179,8 +3179,8 @@ class plotter_gcode(inkex.Effect):
             "id": "plotter Engraver",
             "penetration feed": self.options.plotter_speed,
             "feed": self.options.plotter_speed,
-            "gcode before path": ("G4 P0 \n" + self.options.pen_down),
-            "gcode after path": ("G4 P0 \n" + self.options.pen_up),
+            "gcode before path": ("G4 P0 \n" + self.options.pen_move + self.options.pen_down),
+            "gcode after path": ("G4 P0 \n" + self.options.pen_move + self.options.pen_up),
         }
 
         self.get_info()
