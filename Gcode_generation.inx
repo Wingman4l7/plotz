@@ -5,8 +5,11 @@
 	<dependency type="executable" location="extensions">Gcode_generation.py</dependency>
 	
 
-	<param name="pen-down" type="string" _gui-text="Pen-Down Command:">M280P0S0</param>
-	<param name="pen-up" type="string" _gui-text="Pen-Up Command:">M280P0S45</param>
+	<param name="pen-move" type="string" _gui-text="Pen Move Command:">M280P0S</param>
+	<param name="pen-down" type="string" _gui-text="Pen-Down Command:">0</param>
+	<param name="pen-up" type="string" _gui-text="Pen-Up Command:">45</param>
+	<!--<param name="pen-speed" type="string" _gui-text="Pen Lift / Drop Speed ():">5</param>-->
+	<!-- # 1 will be 45 steps, 5 will be 10 steps. Higher # ==> faster lift & drop. -->
 	<param name="travel-speed" type="int" min="0" max="15000" _gui-text="Travel Speed (mm/min or in/min):">3000</param>
 	<param name="plotter-speed" type="int" min="0" max="15000" _gui-text="Draw Speed (mm/min or in/min):">750</param>
 	<param name="power-delay" type="float" min="0" max="1000" _gui-text="Servo Delay (ms or s):">0</param>	
