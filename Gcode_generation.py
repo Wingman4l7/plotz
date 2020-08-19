@@ -2422,6 +2422,7 @@ class plotter_gcode(inkex.Effect):
         self.OptionParser.add_option("",   "--pen-move",                        action="store", type="string",          dest="pen_move",                            default="M280P0S",                      help="gcode plotter servo move command")
         self.OptionParser.add_option("",   "--pen-down",                        action="store", type="string",          dest="pen_down",                            default="0",                            help="plotter pen down servo position")
         self.OptionParser.add_option("",   "--pen-up",                          action="store", type="string",          dest="pen_up",                              default="45",                           help="plotter pen up servo position")
+        self.OptionParser.add_option("",   "--pen-speed",                       action="store", type="string",          dest="pen_speed",                           default="5",                            help="plotter pen servo degree steps")
         self.OptionParser.add_option("",   "--plotter-speed",                   action="store", type="int",             dest="plotter_speed",                       default="750",                          help="plotter speed (mm/min)")
         self.OptionParser.add_option("",   "--travel-speed",                    action="store", type="string",          dest="travel_speed",                        default="3000",                         help="Travel speed (mm/min)")
         self.OptionParser.add_option("",   "--plotter-power",                   action="store", type="int",             dest="plotter_power",                       default="255",                          help="S# is 256 or 10000 for full power")
@@ -3158,21 +3159,26 @@ class plotter_gcode(inkex.Effect):
             self.orientation( self.layers[min(0,len(self.layers)-1)] )
             self.get_info()
 
-        # down_degree = GET_FROM_SETTINGS
-        # up_degree = GET_FROM_SETTINGS
-        # step_speed = GET_FROM_SETTINGS  
-        # 1 will be 45 steps, 5 will be 10 steps.  Higher # ==> faster lift & drop.
-        # z_move_commands = ""
+        down_degree = self.options.pen_down  # default: 0
+        up_degree = self.options.pen_up      # default: 45
+        step_speed = self.options.pen_speed  # default: 5  
+        # 1 will be 45 steps, 5 will be 10 steps.  Higher number ==> less steps => faster lift & drop.
+        
+        z_move_up_commands = ""  # init
+        for angle in range(down_degree, up_degree+1, step_speed):
+            z_move_up_commands += self.options.pen_move + angle + "\n"
+        
+        z_move_down_commands = ""  # init    
+        # for angle in range():  # needs to go from up to down... 
+        #     pass
 
-        # # start, stop, step
-        # for angle in range(down_degree, up_degree+1, step_speed):
-        #     # move commands
                     
-                    
-        # BUG: penetration feed & feed should not be same setting (self.options.plotter_speed)
+        # BUG: penetration feed & feed should NOT be same setting (self.options.plotter_speed)
         # https://marlinfw.org/docs/gcode/G004.html
         # IMPROVE: dwell (G4) time should be a setting option 
-        # ADD: 
+        # REMOVE / MAKE OPTIONAL: addition of drawing directional layer (useless, messes up SVG) 
+
+        # new option: pen_speed
 
         self.tools = {
             "name": "plotter Engraver",
