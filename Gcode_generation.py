@@ -2419,11 +2419,11 @@ class plotter_gcode(inkex.Effect):
         self.OptionParser.add_option("-d", "--directory",                       action="store", type="string",          dest="directory",                           default="",                             help="Output directory")
         self.OptionParser.add_option("-f", "--filename",                        action="store", type="string",          dest="file",                                default="output.gcode",                 help="File name")
         self.OptionParser.add_option("",   "--add-numeric-suffix-to-filename",  action="store", type="inkbool",         dest="add_numeric_suffix_to_filename",      default=False,                          help="Add numeric suffix to file name")
-        self.OptionParser.add_option("",   "--pen-move",                        action="store", type="string",          dest="pen_move",                            default="M280P0S",                      help="gcode plotter servo move command")
+        self.OptionParser.add_option("",   "--pen-move",                        action="store", type="string",          dest="pen_move",                            default="M280P0S",                      help="plotter servo gcode move command")
         self.OptionParser.add_option("",   "--pen-down",                        action="store", type="string",          dest="pen_down",                            default="0",                            help="plotter pen down servo position")
         self.OptionParser.add_option("",   "--pen-up",                          action="store", type="string",          dest="pen_up",                              default="45",                           help="plotter pen up servo position")
         self.OptionParser.add_option("",   "--pen-speed",                       action="store", type="string",          dest="pen_speed",                           default="5",                            help="plotter pen servo degree steps")
-        self.OptionParser.add_option("",   "--plotter-speed",                   action="store", type="int",             dest="plotter_speed",                       default="750",                          help="plotter speed (mm/min)")
+        self.OptionParser.add_option("",   "--draw-speed",                      action="store", type="int",             dest="draw_speed",                          default="750",                          help="plotter drawing speed (mm/min)")
         self.OptionParser.add_option("",   "--travel-speed",                    action="store", type="string",          dest="travel_speed",                        default="3000",                         help="Travel speed (mm/min)")
         self.OptionParser.add_option("",   "--plotter-power",                   action="store", type="int",             dest="plotter_power",                       default="255",                          help="S# is 256 or 10000 for full power")
         self.OptionParser.add_option("",   "--passes",                          action="store", type="int",             dest="passes",                              default="1",                            help="Quantity of passes")
@@ -2431,7 +2431,7 @@ class plotter_gcode(inkex.Effect):
         self.OptionParser.add_option("",   "--power-delay",                     action="store", type="string",          dest="power_delay",                         default="0",                            help="plotter power-on delay (ms)")
         self.OptionParser.add_option("",   "--suppress-all-messages",           action="store", type="inkbool",         dest="suppress_all_messages",               default=True,                           help="Hide messages during g-code generation")
         self.OptionParser.add_option("",   "--create-log",                      action="store", type="inkbool",         dest="log_create_log",                      default=False,                          help="Create log files")
-        self.OptionParser.add_option("",   "--log-filename",                    action="store", type="string",          dest="log_filename",                        default='',                             help="Create log files")
+        self.OptionParser.add_option("",   "--log-filename",                    action="store", type="string",          dest="log_filename",                        default='',                             help="Log filename")
         self.OptionParser.add_option("",   "--engraving-draw-calculation-paths",action="store", type="inkbool",         dest="engraving_draw_calculation_paths",    default=False,                          help="Draw additional graphics to debug engraving path")
         self.OptionParser.add_option("",   "--unit",                            action="store", type="string",          dest="unit",                                default="G21 (All units in mm)",        help="Units either mm or inches")
         self.OptionParser.add_option("",   "--active-tab",                      action="store", type="string",          dest="active_tab",                          default="",                             help="Defines which tab is active")
@@ -3159,32 +3159,34 @@ class plotter_gcode(inkex.Effect):
             self.orientation( self.layers[min(0,len(self.layers)-1)] )
             self.get_info()
 
-        down_degree = self.options.pen_down  # default: 0
-        up_degree = self.options.pen_up      # default: 45
-        step_speed = self.options.pen_speed  # default: 5  
-        # 1 will be 45 steps, 5 will be 10 steps.  Higher number ==> less steps => faster lift & drop.
+        down_degree = int(self.options.pen_down)  # default: 0
+        up_degree = int(self.options.pen_up)      # default: 45
+        step_speed = int(self.options.pen_speed)  # default: 5  
         
+        # 1 will be 45 steps, 5 will be 10 steps.  Higher number ==> less steps ==> faster lift & drop.
+        # Conditionals ensure consistent start and end angle commands regardless of step speed.
+
         z_move_up_commands = ""  # init
         for angle in range(down_degree, up_degree+1, step_speed):
-            z_move_up_commands += self.options.pen_move + angle + "\n"
+            z_move_up_commands += self.options.pen_move + str(angle) + "\n"
+            if step_speed > (up_degree-angle) and angle != up_degree:
+                z_move_up_commands += self.options.pen_move + str(up_degree) + "\n"
         
-        z_move_down_commands = ""  # init    
-        # for angle in range():  # needs to go from up to down... 
-        #     pass
+        z_move_down_commands = ""  # init
+        for angle in range(up_degree, down_degree-1, -step_speed): 
+            z_move_down_commands += self.options.pen_move + str(angle) + "\n"
+            if step_speed > (angle-down_degree) and angle != down_degree:
+                z_move_down_commands += self.options.pen_move + str(down_degree) + "\n"
 
-                    
-        # BUG: penetration feed & feed should NOT be same setting (self.options.plotter_speed)
         # https://marlinfw.org/docs/gcode/G004.html
         # IMPROVE: dwell (G4) time should be a setting option 
-        # REMOVE / MAKE OPTIONAL: addition of drawing directional layer (useless, messes up SVG) 
-
-        # new option: pen_speed
+        # REMOVE / MAKE OPTIONAL: addition of drawing directional layer (useless, messes up SVG)
 
         self.tools = {
             "name": "plotter Engraver",
             "id": "plotter Engraver",
-            "penetration feed": self.options.plotter_speed,
-            "feed": self.options.plotter_speed,
+            "penetration feed": self.options.draw_speed,  # BUG: ONE OF THESE IS WRONG AND SHOULD BE .travel_speed
+            "feed": self.options.draw_speed,              # BUG: ONE OF THESE IS WRONG AND SHOULD BE .travel_speed
             "gcode before path": ("G4 P0 \n" + self.options.pen_move + self.options.pen_down),
             "gcode after path": ("G4 P0 \n" + self.options.pen_move + self.options.pen_up),
         }
