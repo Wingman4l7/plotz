@@ -3178,6 +3178,9 @@ class plotter_gcode(inkex.Effect):
             if step_speed > (angle-down_degree) and angle != down_degree:
                 z_move_down_commands += self.options.pen_move + str(down_degree) + "\n"
 
+        # BUG: extra line break at end of command sequence, IIRC... remove "\n" in conditional concat?  Test.
+        # does not break GCODE, it ignores blank lines.
+
         # https://marlinfw.org/docs/gcode/G004.html
         # IMPROVE: dwell (G4) time should be a setting option 
         # REMOVE / MAKE OPTIONAL: addition of drawing directional layer (useless, messes up SVG)
@@ -3187,8 +3190,8 @@ class plotter_gcode(inkex.Effect):
             "id": "plotter Engraver",
             "penetration feed": self.options.draw_speed,  # BUG: ONE OF THESE IS WRONG AND SHOULD BE .travel_speed
             "feed": self.options.draw_speed,              # BUG: ONE OF THESE IS WRONG AND SHOULD BE .travel_speed
-            "gcode before path": ("G4 P0 \n" + self.options.pen_move + self.options.pen_down),
-            "gcode after path": ("G4 P0 \n" + self.options.pen_move + self.options.pen_up),
+            "gcode before path": ("G4 P0 \n" + z_move_down_commands),
+            "gcode after path": ("G4 P0 \n" + z_move_up_commands),
         }
 
         self.get_info()
